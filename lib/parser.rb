@@ -2,7 +2,71 @@ require 'rubygems'
 require 'json'
 
 class QbxmlJsonParser
-  def self.generate_model_map(src, des)
+  def self.generate_model_maps
+    definitions.each do |src|
+      attributes = intermediate_mapping(src)
+
+      # write model map
+      model_name = File.basename(src)[0..-6]
+      File.open("#{File.dirname(__FILE__)}/../model_maps/#{model_name}.rb", 'w+') do |f|
+        formatted_map = attributes.map{ |a| ":#{a[0]} => '#{a[1]}'" }.join(",\n      ")
+        f.write <<-MAP
+module QBXML
+  module ModelMaps
+    #{model_name} = {
+      #{formatted_map}
+    }
+  end
+end
+      MAP
+      end
+    end
+  end
+  
+  def self.generate_migrations
+    definitions.each do |src|
+      attributes = intermediate_mapping(src)
+      model_name = File.basename(src)[0..-6]
+      File.open("#{File.dirname(__FILE__)}/../migrations/#{model_name}.rb", 'w+') do |f|
+        columns = []
+        attributes.map do |a|
+          options = nil
+          col_type = case a[3]
+          when 'STRTYPE', 'ENUMTYPE', 'TIMEINTERVALTYPE'
+            if a[2]
+              options = ":limit => #{a[2]}"
+            end
+            :string
+          when 'IDTYPE'
+            options = ':limit => 36'
+            :string
+          when 'INTTYPE'
+            :integer
+          when 'DATETIMETYPE', 'DATETYPE'
+            :datetime
+          when 'AMTTYPE', 'QUANTYPE', 'PRICETYPE', 'PERCENTTYPE'
+            options = ':precision => 9, :scale => 2'
+            :decimal
+          when 'BOOLTYPE'
+            :boolean
+          else
+            raise a.inspect
+            'UNKNOWN!!!!'
+          end
+          col_def = "t.#{col_type} :#{a[0]}"
+          col_def << ", #{options}" if options
+          columns << col_def
+        end
+        f.write columns.join("\n")
+      end
+    end
+  end
+  
+  def self.definitions
+    Dir["#{File.dirname(__FILE__)}/../definitions/**/*.json"]
+  end
+  
+  def self.intermediate_mapping(src)
     json = JSON.parse(File.read(src))
     @attributes = []
 
@@ -16,29 +80,16 @@ class QbxmlJsonParser
       next if element['count'] =~ /n$/ # don't add "has many" attributes
       add_element(element)
     end
-    
-    # write model map
-    File.open(des, 'w+') do |f|
-      formatted_map = @attributes.map{ |a| ":#{a[0]} => '#{a[1]}'" }.join(",\n      ")
-      f.write <<-MAP
-module QBXML
-  module ModelMaps
-    #{model_return_type[0..-4]} = {
-      #{formatted_map}
-    }
-  end
-end
-    MAP
-    end
+    @attributes
   end
   
-  def self.add_element(element, path='')
-    if element['elements'] # recurse to add leafs only
-      path += element['xmlName'] + '/' if element['xmlName'] != 'OR'
-      element['elements'].each { |e| add_element(e, path) }
+  def self.add_element(e, path='')
+    if e['elements'] # recurse to add leafs only
+      path += e['xmlName'] + '/' if e['xmlName'] != 'OR'
+      e['elements'].each { |element| add_element(element, path) }
     else
-      xml_path = path + element['xmlName']
-      @attributes << [ columnize(xml_path), xml_path ]
+      xml_path = path + e['xmlName']
+      @attributes << [ columnize(xml_path), xml_path, e['maxCA'], e['xmlType'] ]
     end
   end
   
@@ -58,10 +109,4 @@ end
       tr('/', '_').
       downcase
   end
-end
-
-dir = File.dirname(__FILE__)
-Dir["#{dir}/../definitions/**/*.json"].each do |src|
-  des = "#{dir}/model_maps/#{File.basename(src).gsub('.json', '.rb')}"
-  QbxmlJsonParser.generate_model_map(src, des)
 end

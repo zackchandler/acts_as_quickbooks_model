@@ -1,5 +1,5 @@
 require 'hpricot'
-Dir["#{File.dirname(__FILE__)}/model_maps/*"].each{ |model_map| load model_map }
+Dir["#{File.dirname(__FILE__)}/../model_maps/*"].each{ |model_map| load model_map }
 
 module ActsAsQuickbooksModel
   def self.included(base)
@@ -9,8 +9,8 @@ module ActsAsQuickbooksModel
   module ClassMethods
     def acts_as_quickbooks_model(model_type=nil)
       model_type ||= self.to_s
+      raise "Unsupported QBXML model type: #{model_type}" unless QBXML::ModelMaps.constants.include?(model_type)
       const_set('QUICKBOOKS_MODEL_TYPE', model_type)
-      raise "Unsupported QBXML model type: #{model_type}" unless %w(Invoice).include?(model_type)
       include InstanceMethods
     end
   end
