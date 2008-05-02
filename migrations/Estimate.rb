@@ -1,3 +1,4 @@
+# auto-generated from json definitions
 t.string :txn_id, :limit => 36
 t.datetime :time_created
 t.datetime :time_modified

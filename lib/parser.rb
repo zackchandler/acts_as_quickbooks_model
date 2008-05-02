@@ -11,6 +11,7 @@ class QbxmlJsonParser
       File.open("#{File.dirname(__FILE__)}/../model_maps/#{model_name}.rb", 'w+') do |f|
         formatted_map = attributes.map{ |a| ":#{a[0]} => '#{a[1]}'" }.join(",\n      ")
         f.write <<-MAP
+# auto-generated from json definitions
 module QBXML
   module ModelMaps
     #{model_name} = {
@@ -50,14 +51,14 @@ end
           when 'BOOLTYPE'
             :boolean
           else
-            raise a.inspect
             'UNKNOWN!!!!'
           end
           col_def = "t.#{col_type} :#{a[0]}"
           col_def << ", #{options}" if options
           columns << col_def
         end
-        f.write columns.join("\n")
+        f.puts '# auto-generated from json definitions'
+        f.puts columns.join("\n")
       end
     end
   end

@@ -1,3 +1,4 @@
+# auto-generated from json definitions
 module QBXML
   module ModelMaps
     ItemService = {

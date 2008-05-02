@@ -1,3 +1,4 @@
+# auto-generated from json definitions
 t.string :txn_line_id, :limit => 36
 t.string :item_ref_list_id, :limit => 36
 t.string :item_ref_full_name
