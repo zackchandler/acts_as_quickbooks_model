@@ -1,3 +1,7 @@
+### Introduction ###
+
+This plugin simplifies the parsing of qbXML messages into ActiveRecord model attributes.
+
 ### Usage ###
 
     class Customer < ActiveRecord::Base
@@ -27,3 +31,7 @@
     customer.list_id # => "150000-933272658"
     customer.name # => "Abercrombie, Kristy"
     ...
+    
+### References ###
+
+[QuickBooks SDK Reference](http://developer.intuit.com/qbsdk-current/Common/newOSR/index.html)
