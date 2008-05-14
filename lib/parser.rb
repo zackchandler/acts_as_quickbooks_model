@@ -53,12 +53,26 @@ end
           else
             'UNKNOWN!!!!'
           end
-          col_def = "t.#{col_type} :#{a[0]}"
-          col_def << ", #{options}" if options
-          columns << col_def
+          columns << { :name => a[0], :col_type => col_type, :options => options }
         end
+        
         f.puts '# auto-generated from json definitions'
-        f.puts columns.join("\n")
+        f.puts
+        f.puts '# new table definitions'
+        columns.each do |col|
+          f.puts [ "t.#{col[:col_type]} :#{col[:name]}", col[:options] ].compact.join(', ')
+        end
+        f.puts
+        f.puts '# add_column definitions'
+        columns.each do |col|
+          f.puts [ "add_column :table_name, :#{col[:name]}, :#{col[:col_type]}", col[:options] ].compact.join(', ')
+        end
+        f.puts
+        f.puts '# remove_column definitions'
+        columns.each do |col|
+          f.puts "remove_column :table_name, :#{col[:name]}"
+        end
+        
       end
     end
   end
