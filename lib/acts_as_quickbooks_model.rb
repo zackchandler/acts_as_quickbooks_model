@@ -32,7 +32,7 @@ module ActsAsQuickbooksModel
         element = node/path
         return nil if element.nil? || element.empty?
         element = element.first if element.is_a?(Array)
-        element.innerHTML.gsub('&amp;', '&')
+        element.innerHTML.gsub('&amp;', '&').gsub('&apos;', "'")
       end
   end
 end
