@@ -1,0 +1,3 @@
+sqlite3:
+  :adapter: sqlite3
+  :dbfile: acts_as_quickbooks_model_plugin.sqlite3.db

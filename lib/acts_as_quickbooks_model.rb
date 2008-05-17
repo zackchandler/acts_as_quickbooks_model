@@ -25,6 +25,16 @@ module ActsAsQuickbooksModel
       attributes_to_set.each do |a|
         self[a.to_sym] = hpricot_fetch(node, qbxml_model_map[a.to_sym])
       end
+      
+      # build has_many associations
+      has_many_associations = self.class.reflections.delete_if { |k,v| self.class.reflections[k].macro != :has_many }
+      has_many_associations.each do |k,v|
+        association_model = Inflector.camelize(Inflector.singularize(k))
+        element = association_model.to_s + 'Ret'
+        node.search(element).each do |association_node|
+          self.send(k).send(:build, :qbxml => association_node)
+        end
+      end
     end
     
     private
