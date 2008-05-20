@@ -11,10 +11,12 @@ end
 class InvoiceLine < ActiveRecord::Base
   acts_as_quickbooks_model
   belongs_to :invoice
+  belongs_to :invoice_line_group
 end
 class InvoiceLineGroup < ActiveRecord::Base
   acts_as_quickbooks_model
   belongs_to :invoice
+  has_many :invoice_lines
 end
 
 CUSTOMER_RET = <<-XML
@@ -47,6 +49,12 @@ INVOICE_RET = <<-XML
 		<ItemGroupRef>
 			<ListID>987</ListID>
 		</ItemGroupRef>
+		<InvoiceLineRet>
+      <TxnLineID>345</TxnLineID>
+      <ItemRef>
+        <ListID>789</ListID>
+      </ItemRef>
+    </InvoiceLineRet>
 	</InvoiceLineGroupRet>
 </InvoiceRet>
 XML
@@ -74,9 +82,15 @@ context 'A model using acts_as_quickbooks_model' do
     invoice.invoice_lines[1].txn_line_id.should.equal '012'
     invoice.invoice_lines[1].item_ref_list_id.should.equal '567'
     
+    # invoice_line_groups
     invoice.invoice_line_groups.count.should.equal 1
     invoice.invoice_line_groups[0].invoice_id.should.equal invoice.id
     invoice.invoice_line_groups[0].txn_line_id.should.equal '321'
     invoice.invoice_line_groups[0].item_group_ref_list_id.should.equal '987'
+    
+    # invoice_line_group invoice_lines
+    invoice.invoice_line_groups[0].invoice_lines.count.should.equal 1
+    invoice.invoice_line_groups[0].invoice_lines[0].txn_line_id.should.equal '345'
+    invoice.invoice_line_groups[0].invoice_lines[0].item_ref_list_id.should.equal '789'
   end
 end

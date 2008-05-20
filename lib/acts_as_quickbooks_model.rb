@@ -31,13 +31,14 @@ module ActsAsQuickbooksModel
       has_many_associations.each do |k,v|
         association_model = Inflector.camelize(Inflector.singularize(k))
         element = association_model.to_s + 'Ret'
-        node.search(element).each do |association_node|
+        node.search("> #{element}").each do |association_node|
           self.send(k).send(:build, :qbxml => association_node)
         end
       end
     end
-    
+
     private
+
       def hpricot_fetch(node, path)
         element = node/path
         return nil if element.nil? || element.empty?
