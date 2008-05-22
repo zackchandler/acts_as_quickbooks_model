@@ -103,8 +103,10 @@ end
       path += e['xmlName'] + '/' if e['xmlName'] != 'OR'
       e['elements'].each { |element| add_element(element, path) }
     else
-      xml_path = path + e['xmlName']
-      @attributes << [ columnize(xml_path), xml_path, e['maxCA'], e['xmlType'] ]
+      if e['xmlName']
+        xml_path = path + e['xmlName']
+        @attributes << [ columnize(xml_path), xml_path, e['maxCA'], e['xmlType'] ]
+      end
     end
   end
   
