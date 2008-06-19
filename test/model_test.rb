@@ -16,7 +16,7 @@ end
 class InvoiceLineGroup < ActiveRecord::Base
   acts_as_quickbooks_model
   belongs_to :invoice
-  has_many :invoice_lines
+  has_many :lines, :class_name => 'InvoiceLine'
 end
 
 CUSTOMER_RET = <<-XML
@@ -89,8 +89,8 @@ context 'A model using acts_as_quickbooks_model' do
     invoice.invoice_line_groups[0].item_group_ref_list_id.should.equal '987'
     
     # invoice_line_group invoice_lines
-    invoice.invoice_line_groups[0].invoice_lines.count.should.equal 1
-    invoice.invoice_line_groups[0].invoice_lines[0].txn_line_id.should.equal '345'
-    invoice.invoice_line_groups[0].invoice_lines[0].item_ref_list_id.should.equal '789'
+    invoice.invoice_line_groups[0].lines.count.should.equal 1
+    invoice.invoice_line_groups[0].lines[0].txn_line_id.should.equal '345'
+    invoice.invoice_line_groups[0].lines[0].item_ref_list_id.should.equal '789'
   end
 end

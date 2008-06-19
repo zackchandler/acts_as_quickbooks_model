@@ -27,12 +27,12 @@ module ActsAsQuickbooksModel
       end
       
       # build has_many associations
-      has_many_associations = self.class.reflections.delete_if { |k,v| self.class.reflections[k].macro != :has_many }
-      has_many_associations.each do |k,v|
-        association_model = k.to_s.singularize.camelize
+      has_many_associations = self.class.reflections.dup.delete_if { |k,v| self.class.reflections[k].macro != :has_many }
+      has_many_associations.each do |name,association_def|
+        association_model = (association_def.options[:class_name] || name).to_s.singularize.camelize
         element = association_model.to_s + 'Ret'
         node.search("> #{element}").each do |association_node|
-          self.send(k).send(:build, :qbxml => association_node)
+          self.send(name).send(:build, :qbxml => association_node)
         end
       end
     end
