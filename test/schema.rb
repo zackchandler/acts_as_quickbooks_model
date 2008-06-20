@@ -26,4 +26,17 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string :txn_line_id
     t.string :item_group_ref_list_id
   end
+
+  create_table :payments, :force => true do |t|
+    t.integer :id
+    t.string :txn_id
+  end
+  
+  create_table :products, :force => true do |t|
+    t.integer :id
+    t.string :list_id
+    t.decimal :purchase_cost, :precision => 9, :scale => 2 # from ItemInventory
+    t.string :manufacturer_part_number # from ItemNonInventory
+    t.string :special_item_type # from ItemOtherCharge
+  end
 end

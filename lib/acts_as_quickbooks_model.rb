@@ -7,10 +7,14 @@ module ActsAsQuickbooksModel
   end
 
   module ClassMethods
-    def acts_as_quickbooks_model(model_type=nil)
-      model_type ||= self.to_s
-      raise "Unsupported QBXML model type: #{model_type}" unless QBXML::ModelMaps.constants.include?(model_type)
-      const_set('QUICKBOOKS_MODEL_TYPE', model_type)
+    def acts_as_quickbooks_model(*args)
+      model_types = args.empty? ? self.to_s.to_a : args.to_a
+
+      # validate model type(s)
+      model_types.each do |model_type|
+        raise "Unsupported QBXML model type: #{model_type}" unless QBXML::ModelMaps.constants.include?(model_type)
+      end
+      const_set('QUICKBOOKS_MODEL_TYPES', model_types)
       include InstanceMethods
     end
   end
@@ -18,11 +22,16 @@ module ActsAsQuickbooksModel
   module InstanceMethods
       
     def qbxml=(xml)
-      model_type = self.class.const_get('QUICKBOOKS_MODEL_TYPE')
-      qbxml_model_map = QBXML::ModelMaps.const_get(model_type)
-      attributes_to_set = qbxml_model_map.keys & attribute_names.map{ |a| a.to_sym }
+      # build model_maps for all specified models
+      qbxml_model_map = {}
+      self.class.const_get('QUICKBOOKS_MODEL_TYPES').each do |model_type|
+        qbxml_model_map.merge!(QBXML::ModelMaps.const_get(model_type))
+      end
+      
+      # set qbxml attributes that exist in model and map
+      model_qbxml_attributes = qbxml_model_map.keys & attribute_names.map{ |a| a.to_sym }
       node = xml.respond_to?('innerHTML') ? xml : Hpricot.XML(xml).root
-      attributes_to_set.each do |a|
+      model_qbxml_attributes.each do |a|
         self[a.to_sym] = hpricot_fetch(node, qbxml_model_map[a.to_sym])
       end
       
