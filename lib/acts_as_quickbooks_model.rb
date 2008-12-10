@@ -28,11 +28,14 @@ module ActsAsQuickbooksModel
         qbxml_model_map.merge!(QBXML::ModelMaps.const_get(model_type))
       end
       
-      # set qbxml attributes that exist in model and map
-      model_qbxml_attributes = qbxml_model_map.keys & attribute_names.map{ |a| a.to_sym }
+      # set qbxml attributes that exist in map and model
+      model_qbxml_attributes = []
+      qbxml_model_map.keys.each do |key|
+        model_qbxml_attributes << key if self.respond_to?("#{key}=")
+      end
       node = xml.respond_to?('innerHTML') ? xml : Hpricot.XML(xml).root
       model_qbxml_attributes.each do |a|
-        self[a.to_sym] = hpricot_fetch(node, qbxml_model_map[a.to_sym])
+        self.send("#{a}=", hpricot_fetch(node, qbxml_model_map[a.to_sym]))
       end
       
       # build has_many associations

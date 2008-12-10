@@ -2,6 +2,7 @@ require File.dirname(__FILE__) + '/test_helper'
 
 class Customer < ActiveRecord::Base
   acts_as_quickbooks_model
+  alias_attribute :is_active, :active
 end
 class Payment < ActiveRecord::Base
   acts_as_quickbooks_model 'ReceivePayment'
@@ -29,6 +30,7 @@ CUSTOMER_RET = <<-XML
 <CustomerRet>
   <ListID>123</ListID>
   <Name>Foo</Name>
+  <IsActive>true</IsActive>
   <ParentRef>
     <ListID>456</ListID>
   </ParentRef>
@@ -102,6 +104,11 @@ context 'A model using acts_as_quickbooks_model' do
     customer.foo.should.equal 'bar'
   end
 
+  specify 'should support alias_attributes on model' do
+    customer = Customer.new(:qbxml => CUSTOMER_RET)
+    customer.should.be.active?
+  end
+  
   specify 'should support overriding default model type' do
     payment = Payment.create!(:qbxml => PAYMENT_RET)
     payment.txn_id.should.equal '123'
