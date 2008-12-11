@@ -36,10 +36,9 @@ module ActsAsQuickbooksModel
       node = xml.respond_to?('innerHTML') ? xml : Hpricot.XML(xml).root
       
       model_qbxml_attributes.each do |a|
-        element = node/qbxml_model_map[a.to_sym]
+        element = node/"/#{qbxml_model_map[a.to_sym]}"
         next if element.nil? || element.empty?
         
-        element = element.first if element.is_a?(Array)
         value = element.innerHTML.gsub('&amp;', '&').gsub('&apos;', "'")
         
         self.send("#{a}=", value)
