@@ -34,8 +34,15 @@ module ActsAsQuickbooksModel
         model_qbxml_attributes << key if self.respond_to?("#{key}=")
       end
       node = xml.respond_to?('innerHTML') ? xml : Hpricot.XML(xml).root
+      
       model_qbxml_attributes.each do |a|
-        self.send("#{a}=", hpricot_fetch(node, qbxml_model_map[a.to_sym]))
+        element = node/qbxml_model_map[a.to_sym]
+        next if element.nil? || element.empty?
+        
+        element = element.first if element.is_a?(Array)
+        value = element.innerHTML.gsub('&amp;', '&').gsub('&apos;', "'")
+        
+        self.send("#{a}=", value)
       end
       
       # build has_many associations
@@ -48,14 +55,5 @@ module ActsAsQuickbooksModel
         end
       end
     end
-
-    private
-
-      def hpricot_fetch(node, path)
-        element = node/path
-        return nil if element.nil? || element.empty?
-        element = element.first if element.is_a?(Array)
-        element.innerHTML.gsub('&amp;', '&').gsub('&apos;', "'")
-      end
   end
 end
