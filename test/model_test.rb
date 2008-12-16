@@ -25,6 +25,15 @@ end
 class Product < ActiveRecord::Base
   acts_as_quickbooks_model 'ItemInventory', 'ItemNonInventory', 'ItemOtherCharge'
 end
+class Item < ActiveRecord::Base
+  acts_as_quickbooks_model 'ItemSalesTaxGroup'
+  has_many :linked_items
+  has_many :item_sales_taxs, :class_name => 'LinkedItem'
+end
+class LinkedItem < ActiveRecord::Base
+  acts_as_quickbooks_model 'ItemSalesTax'
+  belongs_to :item
+end
 
 CUSTOMER_RET = <<-XML
 <CustomerRet>
@@ -94,6 +103,26 @@ ITEM_OTHER_CHARGE_RET = <<-XML
 </ItemOtherChargeRet>
 XML
 
+SALES_TAX_GROUP_RET = <<-XML
+<ItemSalesTaxGroupRet>
+  <ListID>80000030-1189440679</ListID>
+  <TimeCreated>2007-09-10T09:11:19-08:00</TimeCreated>
+  <TimeModified>2007-09-10T09:11:19-08:00</TimeModified>
+  <EditSequence>1189440679</EditSequence>
+  <Name>San Thomas Group</Name>
+  <IsActive>true</IsActive>
+  <ItemDesc>Sales Tax - San Thomas County</ItemDesc>
+  <ItemSalesTaxRef>
+    <ListID>8000002A-1189440679</ListID>
+    <FullName>County, San Thomas</FullName>
+  </ItemSalesTaxRef>
+  <ItemSalesTaxRef>
+    <ListID>80000029-1189440679</ListID>
+    <FullName>Assessment</FullName>
+  </ItemSalesTaxRef>
+</ItemSalesTaxGroupRet>
+XML
+
 context 'A model using acts_as_quickbooks_model' do
 
   specify 'should assign attributes from qbxml if matching attributes exist on model' do
@@ -114,7 +143,7 @@ context 'A model using acts_as_quickbooks_model' do
     payment.txn_id.should.equal '123'
   end
 
-  specify 'should build has_many associations if they exist on model and in qbxml' do
+  specify 'should build has_many associations by has_many class_name' do
     invoice = Invoice.create!(:qbxml => INVOICE_RET)
     invoice.txn_id.should.equal '123'
     
@@ -137,6 +166,20 @@ context 'A model using acts_as_quickbooks_model' do
     invoice.invoice_line_groups[0].lines.count.should.equal 1
     invoice.invoice_line_groups[0].lines[0].txn_line_id.should.equal '345'
     invoice.invoice_line_groups[0].lines[0].item_ref_list_id.should.equal '789'
+  end
+  
+  specify 'should build has_many associations by has_many name' do
+    tax1 = Item.create! :list_id => '8000002A-1189440679'
+    tax2 = Item.create! :list_id => '80000029-1189440679'
+
+    sales_tax_group = Item.create!(:qbxml => SALES_TAX_GROUP_RET)
+    sales_tax_group.list_id.should.equal '80000030-1189440679'
+    
+    linked_item1 = sales_tax_group.linked_items[0]
+    linked_item2 = sales_tax_group.linked_items[1]
+
+    linked_item1.list_id.should.equal '8000002A-1189440679'
+    linked_item2.list_id.should.equal '80000029-1189440679'
   end
 
   specify 'should allow polymorphic support for models that declare support for multiple qb model types' do

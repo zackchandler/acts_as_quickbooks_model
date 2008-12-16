@@ -40,4 +40,16 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string :manufacturer_part_number # from ItemNonInventory
     t.string :special_item_type # from ItemOtherCharge
   end
+  
+  create_table :items, :force => true do |t|
+    t.integer :id
+    t.string :list_id
+    t.string :full_name
+  end
+
+  create_table :linked_items, :force => true do |t|
+    t.integer :id
+    t.integer :item_id
+    t.string :list_id
+  end
 end
