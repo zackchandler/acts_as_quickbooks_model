@@ -8,6 +8,12 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string :foo
   end
 
+  create_table :notes, :force => true do |t|
+    t.integer :id
+    t.integer :customer_id
+    t.string :note
+  end
+  
   create_table :invoices, :force => true do |t|
     t.integer :id
     t.string :txn_id

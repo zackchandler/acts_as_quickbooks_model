@@ -2,8 +2,13 @@ require File.dirname(__FILE__) + '/test_helper'
 
 class Customer < ActiveRecord::Base
   acts_as_quickbooks_model
+  has_many :notes
   alias_attribute :is_active, :active
 end
+class Note < ActiveRecord::Base
+  belongs_to :customer
+end
+
 class Payment < ActiveRecord::Base
   acts_as_quickbooks_model 'ReceivePayment'
 end
@@ -43,6 +48,7 @@ CUSTOMER_RET = <<-XML
   <ParentRef>
     <ListID>456</ListID>
   </ParentRef>
+  <Notes>foo bar</Notes>
 </CustomerRet>
 XML
 
@@ -194,5 +200,12 @@ context 'A model using acts_as_quickbooks_model' do
     other_charge_product = Product.create!(:qbxml => ITEM_OTHER_CHARGE_RET)
     other_charge_product.list_id.should.equal '345'
     other_charge_product.special_item_type.should.equal 'foo'
+  end
+
+  specify 'should not attempt to assign a has_many if an identical node appears as a QB element' do
+    # Example: Customer has_many notes
+    # CustomerRet sends back <Notes> node
+    customer = Customer.create!(:qbxml => CUSTOMER_RET)
+    customer.notes.should.be.empty
   end
 end

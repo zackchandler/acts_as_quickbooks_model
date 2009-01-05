@@ -31,7 +31,9 @@ module ActsAsQuickbooksModel
       # set qbxml attributes that exist in map and model
       model_qbxml_attributes = []
       qbxml_model_map.keys.each do |key|
-        model_qbxml_attributes << key if self.respond_to?("#{key}=")
+        if self.respond_to?("#{key}=") && self.class.reflections[key.to_sym].nil?
+          model_qbxml_attributes << key
+        end
       end
       node = xml.respond_to?('innerHTML') ? xml : Hpricot.XML(xml).root
       
