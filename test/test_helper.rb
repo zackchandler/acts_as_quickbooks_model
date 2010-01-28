@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'active_record'
-require 'test/spec'
+require 'test/unit'
 require File.expand_path(File.dirname(__FILE__) + '/../lib/acts_as_quickbooks_model')
 ActiveRecord::Base.send :include, ActsAsQuickbooksModel
 

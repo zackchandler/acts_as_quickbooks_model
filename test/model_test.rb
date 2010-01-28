@@ -129,83 +129,89 @@ SALES_TAX_GROUP_RET = <<-XML
 </ItemSalesTaxGroupRet>
 XML
 
-context 'A model using acts_as_quickbooks_model' do
+class ActsAsQuickBooksModelTest < Test::Unit::TestCase
 
-  specify 'should assign attributes from qbxml if matching attributes exist on model' do
+  def test_assign_attributes_from_qbxml_if_matching_attributes_exist_on_model
     customer = Customer.new(:qbxml => CUSTOMER_RET, :foo => 'bar')
-    customer.list_id.should.equal '123'
-    customer.name.should.equal 'Foo'
-    customer.parent_ref_list_id.should.equal '456'
-    customer.foo.should.equal 'bar'
+    assert_equal '123', customer.list_id
+    assert_equal 'Foo', customer.name
+    assert_equal '456', customer.parent_ref_list_id
+    assert_equal 'bar', customer.foo
   end
 
-  specify 'should support alias_attributes on model' do
+  def test_support_alias_attributes_on_model
     customer = Customer.new(:qbxml => CUSTOMER_RET)
-    customer.should.be.active?
+    assert customer.active?
   end
   
-  specify 'should support overriding default model type' do
+  def test_support_overriding_default_model_type
     payment = Payment.create!(:qbxml => PAYMENT_RET)
-    payment.txn_id.should.equal '123'
+    assert_equal '123', payment.txn_id
   end
 
-  specify 'should build has_many associations by has_many class_name' do
+  def test_build_has_many_associations_by_has_many_class_name
     invoice = Invoice.create!(:qbxml => INVOICE_RET)
-    invoice.txn_id.should.equal '123'
+    assert_equal '123', invoice.txn_id
     
     # invoice_lines
-    invoice.invoice_lines.count.should.equal 2
-    invoice.invoice_lines[0].invoice_id.should.equal invoice.id
-    invoice.invoice_lines[0].txn_line_id.should.equal '456'
-    invoice.invoice_lines[0].item_ref_list_id.should.equal '789'
-    invoice.invoice_lines[1].invoice_id.should.equal invoice.id
-    invoice.invoice_lines[1].txn_line_id.should.equal '012'
-    invoice.invoice_lines[1].item_ref_list_id.should.equal '567'
+    assert_equal 2, invoice.invoice_lines.count
+
+    line = invoice.invoice_lines[0]
+    assert_equal invoice.id,  line.invoice_id
+    assert_equal '456', line.txn_line_id
+    assert_equal '789', line.item_ref_list_id
+
+    line = invoice.invoice_lines[1]
+    assert_equal invoice.id, line.invoice_id
+    assert_equal '012', line.txn_line_id
+    assert_equal '567', line.item_ref_list_id
     
     # invoice_line_groups
-    invoice.invoice_line_groups.count.should.equal 1
-    invoice.invoice_line_groups[0].invoice_id.should.equal invoice.id
-    invoice.invoice_line_groups[0].txn_line_id.should.equal '321'
-    invoice.invoice_line_groups[0].item_group_ref_list_id.should.equal '987'
+    group = invoice.invoice_line_groups[0]
+    assert_equal 1, invoice.invoice_line_groups.count
+    assert_equal invoice.id, group.invoice_id
+    assert_equal '321', group.txn_line_id
+    assert_equal '987', group.item_group_ref_list_id
     
     # invoice_line_group invoice_lines
-    invoice.invoice_line_groups[0].lines.count.should.equal 1
-    invoice.invoice_line_groups[0].lines[0].txn_line_id.should.equal '345'
-    invoice.invoice_line_groups[0].lines[0].item_ref_list_id.should.equal '789'
+    assert_equal 1, invoice.invoice_line_groups[0].lines.count
+    group_line = invoice.invoice_line_groups[0].lines[0]
+    assert_equal '345', group_line.txn_line_id
+    assert_equal '789', group_line.item_ref_list_id
   end
   
-  specify 'should build has_many associations by has_many name' do
+  def test_should_build_has_many_associations_by_has_many_name
     tax1 = Item.create! :list_id => '8000002A-1189440679'
     tax2 = Item.create! :list_id => '80000029-1189440679'
 
     sales_tax_group = Item.create!(:qbxml => SALES_TAX_GROUP_RET)
-    sales_tax_group.list_id.should.equal '80000030-1189440679'
+    assert_equal '80000030-1189440679', sales_tax_group.list_id
     
     linked_item1 = sales_tax_group.linked_items[0]
     linked_item2 = sales_tax_group.linked_items[1]
 
-    linked_item1.list_id.should.equal '8000002A-1189440679'
-    linked_item2.list_id.should.equal '80000029-1189440679'
+    assert_equal '8000002A-1189440679', linked_item1.list_id
+    assert_equal '80000029-1189440679', linked_item2.list_id
   end
 
-  specify 'should allow polymorphic support for models that declare support for multiple qb model types' do
+  def should_allow_polymorphic_support_for_models_that_declare_support_for_multiple_qb_model_types
     inventory_product = Product.create!(:qbxml => ITEM_INVENTORY_RET)
-    inventory_product.list_id.should.equal '123'
-    inventory_product.purchase_cost.should.equal 1
+    assert_equal '123', inventory_product.list_id
+    assert_equal 1, inventory_product.purchase_cost
     
     non_inventory_product = Product.create!(:qbxml => ITEM_NON_INVENTORY_RET)
-    non_inventory_product.list_id.should.equal '234'
-    non_inventory_product.manufacturer_part_number.should.equal '2'
+    assert_equal '234', non_inventory_product.list_id
+    assert_equal '2', non_inventory_product.manufacturer_part_number
    
     other_charge_product = Product.create!(:qbxml => ITEM_OTHER_CHARGE_RET)
-    other_charge_product.list_id.should.equal '345'
-    other_charge_product.special_item_type.should.equal 'foo'
+    assert_equal '345', other_charge_product.list_id
+    assert_equal 'foo', other_charge_product.special_item_type
   end
 
-  specify 'should not attempt to assign a has_many if an identical node appears as a QB element' do
+  def test_not_attempt_to_assign_a_has_many_if_an_identical_node_appears_as_a_QB_element
     # Example: Customer has_many notes
     # CustomerRet sends back <Notes> node
     customer = Customer.create!(:qbxml => CUSTOMER_RET)
-    customer.notes.should.be.empty
+    assert customer.notes.empty?
   end
 end
