@@ -76,6 +76,12 @@ This plugin simplifies the parsing of qbXML messages into ActiveRecord model att
     invoice.invoice_line_groups.first.txn_line_id # => "321"
     ...
     
+### Tested Ruby Versions ###
+
+* 1.8.6
+* 1.8.7
+* 1.9.1
+
 ### References ###
 
 [QuickBooks SDK Reference](http://developer.intuit.com/qbsdk-current/Common/newOSR/index.html)

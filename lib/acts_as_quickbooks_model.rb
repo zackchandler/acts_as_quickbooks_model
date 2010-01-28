@@ -8,11 +8,12 @@ module ActsAsQuickbooksModel
 
   module ClassMethods
     def acts_as_quickbooks_model(*args)
-      model_types = args.empty? ? self.to_s.to_a : args.to_a
+      model_types = args.uniq.compact
+      model_types = [ self.to_s ] if model_types.empty?
 
       # validate model type(s)
       model_types.each do |model_type|
-        raise "Unsupported QBXML model type: #{model_type}" unless QBXML::ModelMaps.constants.include?(model_type)
+        raise "Unsupported QBXML model type: #{model_type}" unless QBXML::ModelMaps.constants.map{ |c| c.to_s }.include?(model_type)
       end
       const_set('QUICKBOOKS_MODEL_TYPES', model_types)
       include InstanceMethods
