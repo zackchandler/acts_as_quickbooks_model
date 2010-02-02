@@ -214,4 +214,21 @@ class ActsAsQuickBooksModelTest < Test::Unit::TestCase
     customer = Customer.create!(:qbxml => CUSTOMER_RET)
     assert customer.notes.empty?
   end
+  
+  def test_convert_xml_entities
+    qbxml = <<-XML
+      <CustomerRet>
+        <ListID>123</ListID>
+        <Name>foo &amp; bar</Name>
+        <IsActive>true</IsActive>
+        <ParentRef>
+          <ListID>456</ListID>
+        </ParentRef>
+        <Contact>1&quot; foo</Contact>
+      </CustomerRet>
+    XML
+    customer = Customer.create!(:qbxml => qbxml)
+    assert_equal 'foo & bar', customer.name
+    assert_equal '1" foo', customer.contact
+  end
 end

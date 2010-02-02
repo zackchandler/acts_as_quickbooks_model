@@ -3,6 +3,7 @@ ActiveRecord::Schema.define(:version => 1) do
     t.integer :id
     t.string :list_id
     t.string :name
+    t.string :contact
     t.boolean :active
     t.string :parent_ref_list_id
     t.string :foo

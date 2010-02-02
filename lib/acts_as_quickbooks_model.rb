@@ -42,7 +42,7 @@ module ActsAsQuickbooksModel
         element = node/"/#{qbxml_model_map[a.to_sym]}"
         next if element.nil? || element.empty?
         
-        value = element.innerHTML.gsub('&amp;', '&').gsub('&apos;', "'")
+        value = element.innerHTML.gsub('&amp;', '&').gsub('&quot;', '"').gsub('&apos;', "'")
         
         self.send("#{a}=", value)
       end
